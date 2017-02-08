@@ -1,4 +1,4 @@
 [main]
 name=gradewbot
 token=blahblahblahblahblah
-
+pidfile=/var/run/gradewbot.pid
