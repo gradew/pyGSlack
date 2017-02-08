@@ -67,7 +67,7 @@ class GSlack:
         def send_message(self, channel, message):
             self.slack_client.api_call("chat.postMessage", channel=self.arrayChannels[channel], text=message, as_user=True)
 
-        def on_message(self, user, channel, output):
+        def on_message(self, ts, user, channel, output):
             pass
 
         def parse_slack_output(self):
@@ -76,8 +76,8 @@ class GSlack:
                         for output in output_list:
                                 #print(output)
                                 if output and 'text' in output:
-                                        return output['user'], output['channel'], output['text']
-                return None, None, None
+                                        return output['ts'], output['user'], output['channel'], output['text']
+                return None, None, None, None
 
         def run(self):
                 self.isRunning=True
@@ -88,7 +88,7 @@ class GSlack:
                 while self.isRunning:
                         try:
                             if networkError==False:
-                                user, channel, output = self.parse_slack_output()
+                                ts, user, channel, output = self.parse_slack_output()
                         except:
                             self.log("Connection failed!")
                             networkError=True
@@ -102,7 +102,7 @@ class GSlack:
                                 if self.connect():
                                     networkError=False
                         if user and output and channel:
-                            self.on_message(self.arrayUsersReverse[user], self.arrayChannelsReverse[channel], output)
+                            self.on_message(ts, self.arrayUsersReverse[user], self.arrayChannelsReverse[channel], output)
                         time.sleep(timer)
 
         def stop(self):
