@@ -16,7 +16,11 @@ class GSlack:
                 self.BOT_TOKEN=botToken
                 self.isRunning=False
 
+        def log(self, msg):
+            pass
+
         def connect(self):
+                self.log("Connecting...")
                 try:
                         self.slack_client=SlackClient(self.BOT_TOKEN)
                 except:
@@ -24,6 +28,7 @@ class GSlack:
                 self.get_channels()
                 self.get_users()
                 self.slack_client.rtm_connect()
+                self.log("Connected!")
                 return True
 
         def get_channels(self):
@@ -76,12 +81,29 @@ class GSlack:
 
         def run(self):
                 self.isRunning=True
+                timer=0.5
+                counter=0
+                waitReconnect=10/timer
+                networkError=False
                 while self.isRunning:
-                        user, channel, output = self.parse_slack_output()
+                        try:
+                            if networkError==False:
+                                user, channel, output = self.parse_slack_output()
+                        except:
+                            self.log("Connection failed!")
+                            networkError=True
+                            counter=0
+                        if networkError:
+                            if counter<waitReconnect:
+                                counter=counter+1
+                            else:
+                                counter=0
+                                self.log("Attempting to reconnect")
+                                if self.connect():
+                                    networkError=False
                         if user and output and channel:
                             self.on_message(self.arrayUsersReverse[user], self.arrayChannelsReverse[channel], output)
-                        time.sleep(0.5)
+                        time.sleep(timer)
 
         def stop(self):
                 self.isRunning=False
-
