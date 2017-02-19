@@ -23,12 +23,12 @@ class GSlack:
                 self.log("Connecting...")
                 try:
                         self.slack_client=SlackClient(self.BOT_TOKEN)
+                        self.get_channels()
+                        self.get_users()
+                        self.slack_client.rtm_connect()
+                        self.log("Connected!")
                 except:
                         return False
-                self.get_channels()
-                self.get_users()
-                self.slack_client.rtm_connect()
-                self.log("Connected!")
                 return True
 
         def get_channels(self):
@@ -86,6 +86,7 @@ class GSlack:
                 waitReconnect=10/timer
                 networkError=False
                 while self.isRunning:
+                        # Try to read from pipe, catch possible exceptions
                         try:
                             if networkError==False:
                                 ts, user, channel, output = self.parse_slack_output()
@@ -93,6 +94,7 @@ class GSlack:
                             self.log("Connection failed!")
                             networkError=True
                             counter=0
+                        # Handle network errors, keep countdown
                         if networkError:
                             if counter<waitReconnect:
                                 counter=counter+1
@@ -101,8 +103,10 @@ class GSlack:
                                 self.log("Attempting to reconnect")
                                 if self.connect():
                                     networkError=False
-                        if user and output and channel:
-                            self.on_message(ts, self.arrayUsersReverse[user], self.arrayChannelsReverse[channel], output)
+                        else:
+                            # All is well, handle the message
+                            if user and output and channel:
+                                self.on_message(ts, self.arrayUsersReverse[user], self.arrayChannelsReverse[channel], output)
                         time.sleep(timer)
 
         def stop(self):
